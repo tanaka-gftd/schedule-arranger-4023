@@ -94,7 +94,20 @@ app.get('/auth/github',
 app.get('/auth/github/callback',
   passport.authenticate('github', { failureRedirect: '/login' }),
   function (req, res) {
-    res.redirect('/');
+
+    const loginFrom = req.cookies.loginFrom;
+
+    //オープンリダイレクト脆弱性対策
+    /* 
+      オープンリダイレクタ脆弱性に対処すべく、 
+      ?from= 以下の文字列が / から始まる URL でのみリダイレクトを実施するように対策
+    */
+    if (loginFrom && loginFrom.startsWith('/')) {
+      res.clearCookie('loginFrom');
+      res.redirect(loginFrom);
+    } else {
+      res.redirect('/');
+    }
 });
 
 // catch 404 and forward to error handler
